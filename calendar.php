@@ -1,9 +1,9 @@
 <?php
 function generateCalendar($month, $year) {
-
     $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-    $firstDayOfMonth = strtotime("$year-$month-01");
+    $formattedMonth = str_pad($month, 2, "0", STR_PAD_LEFT);
+    $firstDayOfMonth = strtotime("$year-$formattedMonth-01");
     $daysInMonth = date('t', $firstDayOfMonth);
 
     $startDay = (date('N', $firstDayOfMonth) - 1);
@@ -13,7 +13,7 @@ function generateCalendar($month, $year) {
 
     echo "<table border='1' cellspacing='0' cellpadding='5'>";
 
-    echo "<tr><th>ISO Week</th>";
+    echo "<tr><th>Week number</th>";
     foreach ($daysOfWeek as $day) {
         echo "<th>$day</th>";
     }
@@ -21,22 +21,21 @@ function generateCalendar($month, $year) {
 
     echo "<tr>";
 
-    $firstThursday = strtotime("Thursday this week", $firstDayOfMonth);
-    $currentWeek = date('W', $firstThursday);
-
-    echo "<td>$currentWeek</td>";
+    $currentDate = "$year-$formattedMonth-01";
+    $isoWeekNumber = getISOWeekNumber($currentDate);
+    echo "<td>$year-$formattedMonth-$isoWeekNumber</td>";
 
     for ($i = 0; $i < $startDay; $i++) {
         echo "<td></td>";
     }
 
     for ($day = 1; $day <= $daysInMonth; $day++) {
-        $currentDate = strtotime("$year-$month-$day");
+        $currentDate = "$year-$formattedMonth-" . str_pad($day, 2, "0", STR_PAD_LEFT);
 
         if (($startDay + $day - 1) % 7 == 0 && $day != 1) {
             echo "</tr><tr>";
-            $currentWeek = date('W', strtotime("Thursday this week", $currentDate));
-            echo "<td>$currentWeek</td>";
+            $isoWeekNumber = getISOWeekNumber($currentDate);
+            echo "<td>$year-$formattedMonth-$isoWeekNumber</td>";
         }
 
         echo "<td>$day</td>";
@@ -51,5 +50,10 @@ function generateCalendar($month, $year) {
     echo "</table>";
 }
 
-generateCalendar(1, 2025);
+function getISOWeekNumber($date) {
+    $dateTime = new DateTime($date);
+    return $dateTime->format("W");
+}
+
+generateCalendar(10, 2025);
 ?>
