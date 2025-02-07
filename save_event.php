@@ -1,9 +1,9 @@
 <?php
 
-$servername = "localhost";
-$username = "root";
+$servername = "";
+$username = "";
 $password = "";
-$dbname = "calendar";
+$dbname = "";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 
@@ -31,19 +31,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->close();
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['date'])) {
-    $date = $_GET['date'];
-    $stmt = $conn->prepare("SELECT * FROM events WHERE date = ?");
-    $stmt->bind_param("s", $date);
-    $stmt->execute();
-    $result = $stmt->get_result();
+if ($_SERVER["REQUEST_METHOD"] == "GET") {
     $events = [];
-    
-    while ($row = $result->fetch_assoc()) {
-        $events[] = $row;
+
+    if (isset($_GET['date'])) {
+        $date = $_GET['date'];
+        $stmt = $conn->prepare("SELECT * FROM events WHERE date = ?");
+        $stmt->bind_param("s", $date);
+    } else {
+        $stmt = $conn->prepare("SELECT * FROM events"); // Get all events
     }
-    
-    echo json_encode($events);
+
+    if ($stmt) {
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        while ($row = $result->fetch_assoc()) {
+            $events[] = $row;
+        }
+
+        echo json_encode($events);
+    } else {
+        echo json_encode(["error" => "Database error: " . $conn->error]);
+    }
+
+    $stmt->close();
 }
 
 $conn->close();

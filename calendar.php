@@ -132,7 +132,7 @@ generateCalendar($month, $year);
     document.getElementById('modalDate').innerText = `Appointments for ${date}`;
     document.getElementById('modalContent').innerText = "Loading...";
 
-    fetch(`saveAppointment.php?date=${date}`)
+    fetch(`save_event.php?date=${date}`)
         .then(response => response.json())
         .then(data => {
             let content = data.length > 0 
@@ -155,7 +155,8 @@ generateCalendar($month, $year);
 }
 
 function saveAppointment() {
-    let formData = new FormData(document.getElementById('addAppointmentForm'));
+    let form = document.getElementById('addAppointmentForm');
+    let formData = new FormData(form);
 
     fetch("save_event.php", {
         method: "POST",
@@ -165,13 +166,49 @@ function saveAppointment() {
     .then(result => {
         if (result.trim() === "Success") {
             alert("Appointment saved!");
-            closeAddAppointmentModal();
+            
+            form.reset();  
+
+            closeAddAppointmentModal(); 
         } else {
             alert("Error saving appointment: " + result);
         }
     })
     .catch(error => console.error("Error:", error));
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+    loadEvents();
+});
+
+function loadEvents() {
+    fetch("save_event.php") // Fetch all events
+        .then(response => response.json())
+        .then(data => {
+            document.querySelectorAll(".calendar-cell").forEach(cell => {
+                const date = cell.dataset.date;
+                const eventList = data.filter(event => event.date === date);
+                
+                cell.querySelector(".event-container")?.remove();
+
+                if (eventList.length > 0) {
+                    let eventHTML = eventList.map(event => 
+                        `<div style="font-size: 12px; background: #ffdd57; padding: 2px; margin: 2px; border-radius: 3px;">
+                            ${event.startTime} - ${event.workerName}
+                        </div>`
+                    ).join("");
+
+                    // ✅ Add events inside the cell
+                    cell.innerHTML += `<div class="event-container">${eventHTML}</div>`;
+                }
+            });
+        })
+        .catch(error => console.error("Error loading events:", error));
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    loadEvents();
+});
 
 function closeModal() {
     document.getElementById('appointmentModal').style.display = 'none';
